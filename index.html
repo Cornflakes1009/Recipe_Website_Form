@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Firebase Database Tutorial From: https://www.youtube.com/watch?v=BOITPwChVP4 -->
+    <style>
+        label {
+            display: inline-block;
+            width: 120px;
+            padding: 0 0 10px 0;
+            font-weight: bold;
+        }
+
+        #Insbtn, .ingredient {
+            background-color: green;
+            color: white;
+        }
+
+        .ingredient, .direction{
+            background-color: red;
+            color: white;
+            margin: 4px 0 0 0;
+        }
+        #direction_list {
+            padding: 4px 0;
+            font-weight: bold;
+            border: 1px solid darkgray;
+        }
+    </style>
+    <title>Document</title>
+</head>
+<body>
+    <label>Recipe Title</label>
+    <input id="Namebox" type="text"><br>
+    <label>Servings</label>
+    <input id="Rollbox" type="text"><br>
+    <label>Prep Time</label>
+    <input id="prep" type="text"><br>
+    <label>Cook Time</label>
+    <input id="cook_time" type="text"><br>
+    <label>Total Time</label>
+    <input id="total_cook_time" type="text"><br>
+    <label>Image</label>
+    <input type="file" id="Coverimage"><br>
+    <label>Category</label>
+    <select id="category" value="" multiple>
+        <!-- building this list in JavaScript -->
+    </select><br>
+    <label>Ingredients</label>
+    <input type="text" id="ingredient">
+    <button id="add_ingredient">Add Ingredient</button><br>
+    <div id="ingredient_section">
+        <label id="ingredient_list">Ingredient List:</label>
+    </div>
+    <label id="directions">Directions:</label><br>
+    <textarea id="direction"></textarea><br>
+    <button id="add_direction">Add Direction</button>
+    <div id="direction_list">Directions List:</div>
+
+    <hr>
+    <button id="Insbtn">Submit</button>
+    <!-- <button id="Selbtn">SELECT</button>
+    <button id="Updbtn">UPDATE</button>
+    <button id="Delbtn">DELETE</button> -->
+
+
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-app.js";
+        //import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+        //import { getStorage } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-firebase/storage";
+
+        
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAxu4362pBjl68B1l9ffnfrLHSy_8OblSA",
+          authDomain: "recipe-website-8184c.firebaseapp.com",
+          projectId: "recipe-website-8184c",
+          databaseURL: "https://recipe-website-8184c-default-rtdb.firebaseio.com",
+          storageBucket: "recipe-website-8184c.appspot.com",
+          messagingSenderId: "280067999615",
+          appId: "1:280067999615:web:d73d3c59c52091a2377c4a",
+          measurementId: "G-YLWCTZ81LD"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        //const analytics = getAnalytics(app);
+        import {getDatabase, ref, set, get, child, update, remove}
+        from "https://www.gstatic.com/firebasejs/9.6.7/firebase-database.js";
+
+        const db = getDatabase();
+        import { getStorage } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-storage.js";
+        const storage = getStorage();
+
+// ------------------------ References ------------------------ //
+        var namebox     = document.getElementById("Namebox");
+        var rollbox     = document.getElementById("Rollbox");
+        var cookTime      = document.getElementById("cook_time");
+        var totalCookTime      = document.getElementById("total_cook_time");
+        var category      = document.getElementById("category");
+        var prepTime    = document.getElementById("prep");
+        var image       = document.getElementById("Coverimage");
+
+        var insBtn = document.getElementById("Insbtn");
+        var selBtn = document.getElementById("Selbtn");
+        var updBtn = document.getElementById("Updbtn");
+        var delBtn = document.getElementById("Delbtn");
+
+// ------------------------ Insert Data ------------------------ //
+        function InsertData() {
+            // console.log(category.value);
+            const selected = document.querySelectorAll('#category option:checked');
+            const values = Array.from(selected).map(el => el.value);
+            console.log(values);
+            let key = Date.now() / 1000 | 0;
+
+            //const mountainImagesRef = ref(storage, image);
+            values.forEach(value => {
+                set(ref(db, "Recipes/"+value+"/"+key), {
+                Title: namebox.value,
+                Feeds: rollbox.value,
+                Category: value,
+                PrepTime: prepTime.value,
+                CookTime: cookTime.value,
+                TotalTime: totalCookTime.value,
+                Ingredients: ingredients, 
+                Directions: directions
+            })
+            .then(()=>{
+                //alert("data stored successfully");
+                window.location.reload();
+            })
+            .catch((error)=>{
+                alert("unsuccessful, error"+error);
+            })
+            });
+        }
+// ------------------------ Select Data ------------------------ //
+        function SelectData() {
+            const dbref = ref(db);
+            get(child(dbref,"TheStudents/"+rollbox.value)).then((snapshot)=>{
+                if(snapshot.exists()){
+                    namebox.value = snapshot.val().NameOfStd;
+                    secbox.value = snapshot.val().Section;
+                    category.value = snapshot.val().Gender;
+                } else {
+                    alert("No data found");
+                }
+            })
+            .catch((error)=>{
+                alert("Unsuccessful, error:"+error);
+            })
+        }
+
+// ------------------------ Update Data ------------------------ //
+        function UpdateData() {
+            update(ref(db, "TheStudents/"+rollbox.value), {
+                NameOfStd: namebox.value,
+                Section: secbox.value,
+                Gender: category.value
+            })
+            .then(()=>{
+                alert("data updated successfully");
+            })
+            .catch((error)=>{
+                alert("unsuccessful, error"+error);
+            })
+        }
+
+// ------------------------ Delete Data ------------------------ //
+        function DeleteData() {
+            remove(ref(db, "TheStudents/"+rollbox.value))
+            .then(()=>{
+                alert("data removed successfully");
+            })
+            .catch((error)=>{
+                alert("unsuccessful, error"+error);
+            });
+        }
+// ------------------------ Assign Events to Buttons ------------------------ //
+        insBtn.addEventListener('click', InsertData);
+        // selBtn.addEventListener('click', SelectData);
+        // updBtn.addEventListener('click', UpdateData);
+        // delBtn.addEventListener('click', DeleteData);
+
+// ------------------------ Local Variables ------------------------ // 
+        var ingredients = [];
+        var items = ["Appetizers", "Snacks", "Chinese", "Mexican", "Filipino", "American", "Japanese", "Comfort", "Chocolate", "Baking", "Grilling", "Holiday", "Christmas", "Thanksgiving", "Halloween", "4th of July", "Summer", "Beach", "Italian", "French", "Korean", "BBQ"];
+        items = items.sort();
+        items.forEach(item => {
+            const node = document.createElement("option");
+            const textnode = document.createTextNode(item);
+            node.appendChild(textnode);
+            document.getElementById("category").appendChild(node);
+        });
+
+// ------------------------ Adding Ingredient Buttons ------------------------ //         
+        $('#add_ingredient').click(function() {
+            const ingredient = $('#ingredient').val().trim();
+            if (ingredient != "") {
+                ingredients.push(ingredient);
+                $('#ingredient_list').append(`<div> <button id="${ingredient}" class="ingredient">${ingredient}</button></div>`);
+                $('#ingredient').val('');
+            }
+        });
+
+// ------------------------ Deleting Ingredients ------------------------ //          
+        $(document.body).on('click', '.ingredient', function() {
+            var id = $(this).attr('id');
+            let index = ingredients.indexOf(id);
+            if (index > -1) {
+                ingredients.splice(index, 1);
+            }
+            $(`#${id}`).remove();
+        });
+
+// ------------------------ Adding Direction Buttons ------------------------ //     
+    var directions = [];    
+        $('#add_direction').click(function() {
+            const direction = $('#direction').val().trim();
+            if (ingredient != "") {
+                directions.push(direction);
+                $('#direction_list').append(`<div> <button id="${direction}" class="direction">${direction}</button></div>`);
+                $('#direction').val('');
+            }
+        });
+      </script>
+      <!-- <script src="logic.js"></script> -->
+</body>
+</html>
